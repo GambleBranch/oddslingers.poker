@@ -10,7 +10,7 @@
 # Downgraded to 3.7 https://github.com/python/typed_ast/issues/124 
 # ref1: https://github.com/python/mypy/issues/7001
 # ref2: https://github.com/dbader/pytest-mypy/pull/44
-FROM python:3.7-buster
+FROM python:3.7-bullseye
 
 # Configuration defaults
 ENV ODDSLINGERS_ROOT "/opt/oddslingers.poker"
@@ -30,7 +30,7 @@ ENV PYTHONUNBUFFERED 1
 # Install system requirements
 RUN apt-get update && apt-get install -y \
     # psycopg2 requirements
-    python-psycopg2 libpq-dev \
+    python3-psycopg2 libpq-dev \
     # fish shell
     fish \
     # npm

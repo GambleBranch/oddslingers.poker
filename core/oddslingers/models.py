@@ -222,10 +222,60 @@ class User(AbstractUser, BaseModel):
         return self.badge_set.filter(season=season).count()
 
     def userbalance(self):
-        return self.userbalance_set.current_season().get()
+        """
+        Get or create the UserBalance row for the current season.
+        
+        IMPORTANT INVARIANT: Every user MUST have a UserBalance row for the 
+        current season. This is critical for the system to function properly.
+        
+        If a row doesn't exist (which should be rare after the data migration 
+        0042), this method will automatically create one with default balance=0.
+        
+        This defensive approach prevents crashes when:
+        - New season added without running prepare_new_season.py
+        - Data migration wasn't applied
+        - Manual database manipulation
+        - Edge cases in user creation flow
+        
+        Returns:
+            UserBalance: The balance object for this user in the current season
+        """
+        balance, _ = self.userbalance_set.get_or_create(
+            season=settings.CURRENT_SEASON,
+            defaults={'balance': 0}
+        )
+        return balance
 
     def userstats(self):
-        return self.userstats_set.current_season().get()
+        """
+        Get or create the UserStats row for the current season.
+        
+        IMPORTANT INVARIANT: Every user MUST have a UserStats row for the 
+        current season. This is critical for calculating user levels and 
+        rendering user profiles (__json__).
+        
+        If a row doesn't exist (which should be rare after the data migration 
+        0042), this method will automatically create one with default values.
+        
+        This defensive approach prevents crashes when:
+        - New season added without running prepare_new_season.py
+        - Data migration wasn't applied
+        - Manual database manipulation
+        - Edge cases in user creation flow
+        
+        Crash history:
+        - UserStats matching query does not exist during login/homepage rendering
+        - Occurred when userstats_set.current_season().get() found empty queryset
+        - Fixed by using get_or_create() pattern instead of .get()
+        
+        Returns:
+            UserStats: The stats object for this user in the current season
+        """
+        stats, _ = self.userstats_set.get_or_create(
+            season=settings.CURRENT_SEASON,
+            defaults={'hands_played': 0, 'games_level': 4000}
+        )
+        return stats
 
     def can_access_table(self, table_bb: int) -> bool:
         if self.cashtables_level < table_bb:
