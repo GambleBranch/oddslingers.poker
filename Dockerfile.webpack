@@ -12,6 +12,6 @@ ENV NODE_OPTIONS=--openssl-legacy-provider
 
 WORKDIR /opt/oddslingers.poker/core/js
 COPY ./core/js/yarn.lock ./core/js/package.json /opt/oddslingers.poker/core/js/
-RUN yarn install
+RUN yarn install --network-timeout 1200000
 
 ENV PATH="/opt/oddslingers.poker/core/js/node_modules/.bin:${PATH}"
